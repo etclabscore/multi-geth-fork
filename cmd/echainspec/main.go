@@ -73,9 +73,18 @@ var chainspecFormats = func() []string {
 }()
 
 var defaultChainspecValues = map[string]common.Configurator{
-	"foundation": params.DefaultGenesisBlock(),
 	"classic":    params.DefaultClassicGenesisBlock(),
-	// TODO
+	"kotti": params.DefaultKottiGenesisBlock(),
+	"mordor": params.DefaultMordorGenesisBlock(),
+
+	"foundation": params.DefaultGenesisBlock(),
+	"ropsten": params.DefaultTestnetGenesisBlock(),
+	"rinkeby": params.DefaultRinkebyGenesisBlock(),
+	"goerli": params.DefaultGoerliGenesisBlock(),
+
+	"social": params.DefaultSocialGenesisBlock(),
+	"ethersocial": params.DefaultEthersocialGenesisBlock(),
+	"mix": params.DefaultMixGenesisBlock(),
 }
 
 var defaultChainspecNames = func() []string {
@@ -104,7 +113,7 @@ var (
 	}
 	outputFormatFlag = cli.StringFlag{
 		Name:  "outputf",
-		Usage: fmt.Sprintf("Output format type for converted configuration file [%s]", strings.Join(chainspecFormats, "|")),
+		Usage: fmt.Sprintf("Output client format type for converted configuration file [%s]", strings.Join(chainspecFormats, "|")),
 	}
 )
 
