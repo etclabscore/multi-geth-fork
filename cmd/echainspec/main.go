@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"log"
 	"os"
 	"strings"
 
@@ -133,12 +134,15 @@ func mustGetChainspecValue(ctx *cli.Context) error {
 }
 
 func init() {
+	log.SetFlags(0)
 	app.Flags = []cli.Flag{
 		FormatInFlag,
 		FileInFlag,
 		DefaultValueFlag,
 	}
-	app.Commands = []cli.Command{}
+	app.Commands = []cli.Command{
+		validateCommand,
+	}
 	app.Before = mustGetChainspecValue
 	app.Action = func(ctx *cli.Context) error {
 		b, err := jsonMarshalPretty(globalChainspecValue)
