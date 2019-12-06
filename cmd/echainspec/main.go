@@ -9,6 +9,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/cmd/utils"
 	"github.com/ethereum/go-ethereum/params"
+	"github.com/ethereum/go-ethereum/params/convert"
 	paramtypes "github.com/ethereum/go-ethereum/params/types"
 	"github.com/ethereum/go-ethereum/params/types/common"
 	"github.com/ethereum/go-ethereum/params/types/goethereum"
@@ -101,9 +102,15 @@ var (
 		Name:  "default",
 		Usage: fmt.Sprintf("Default chainspec values [%s]", strings.Join(defaultChainspecNames, "|")),
 	}
+	convertOutputFormatFlag = cli.StringFlag{
+		Name:  "outputf",
+		Usage: fmt.Sprintf("Output format type for converted configuration file [%s]", strings.Join(chainspecFormats, "|")),
+	}
 )
 
 var globalChainspecValue common.Configurator
+
+var errInvalidOutputFlag = errors.New("invalid output format type")
 var errNoChainspecValue = errors.New("undetermined chainspec value")
 var errInvalidDefaultValue = errors.New("no default chainspec found for name given")
 var errInvalidChainspecValue = errors.New("could not read given chainspec")
@@ -133,19 +140,9 @@ func mustGetChainspecValue(ctx *cli.Context) error {
 	return nil
 }
 
-func init() {
-	log.SetFlags(0)
-	app.Flags = []cli.Flag{
-		FormatInFlag,
-		FileInFlag,
-		DefaultValueFlag,
-	}
-	app.Commands = []cli.Command{
-		validateCommand,
-		convertCommand,
-	}
-	app.Before = mustGetChainspecValue
-	app.Action = func(ctx *cli.Context) error {
+func convertf(ctx *cli.Context) error {
+	c, ok := chainspecFormatTypes[ctx.String(convertOutputFormatFlag.Name)]
+	if !ok {
 		b, err := jsonMarshalPretty(globalChainspecValue)
 		if err != nil {
 			return err
@@ -153,6 +150,32 @@ func init() {
 		fmt.Println(string(b))
 		return nil
 	}
+	err := convert.Convert(globalChainspecValue, c)
+	if err != nil {
+		return err
+	}
+	b, err := jsonMarshalPretty(c)
+	if err != nil {
+		return err
+	}
+	fmt.Println(string(b))
+	return nil
+}
+
+func init() {
+	log.SetFlags(0)
+	app.Flags = []cli.Flag{
+		FormatInFlag,
+		FileInFlag,
+		DefaultValueFlag,
+		convertOutputFormatFlag,
+	}
+	app.Commands = []cli.Command{
+		validateCommand,
+		//convertCommand,
+	}
+	app.Before = mustGetChainspecValue
+	app.Action = convertf
 }
 
 func main() {
