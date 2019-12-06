@@ -7,7 +7,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/ethereum/go-ethereum/cmd/utils"
 	"github.com/ethereum/go-ethereum/params"
 	"github.com/ethereum/go-ethereum/params/convert"
 	paramtypes "github.com/ethereum/go-ethereum/params/types"
@@ -73,18 +72,18 @@ var chainspecFormats = func() []string {
 }()
 
 var defaultChainspecValues = map[string]common.Configurator{
-	"classic":    params.DefaultClassicGenesisBlock(),
-	"kotti": params.DefaultKottiGenesisBlock(),
-	"mordor": params.DefaultMordorGenesisBlock(),
+	"classic": params.DefaultClassicGenesisBlock(),
+	"kotti":   params.DefaultKottiGenesisBlock(),
+	"mordor":  params.DefaultMordorGenesisBlock(),
 
 	"foundation": params.DefaultGenesisBlock(),
-	"ropsten": params.DefaultTestnetGenesisBlock(),
-	"rinkeby": params.DefaultRinkebyGenesisBlock(),
-	"goerli": params.DefaultGoerliGenesisBlock(),
+	"ropsten":    params.DefaultTestnetGenesisBlock(),
+	"rinkeby":    params.DefaultRinkebyGenesisBlock(),
+	"goerli":     params.DefaultGoerliGenesisBlock(),
 
-	"social": params.DefaultSocialGenesisBlock(),
+	"social":      params.DefaultSocialGenesisBlock(),
 	"ethersocial": params.DefaultEthersocialGenesisBlock(),
-	"mix": params.DefaultMixGenesisBlock(),
+	"mix":         params.DefaultMixGenesisBlock(),
 }
 
 var defaultChainspecNames = func() []string {
@@ -96,7 +95,7 @@ var defaultChainspecNames = func() []string {
 }()
 
 var (
-	app = utils.NewApp(gitCommit, gitDate, "the evm command line interface")
+	app = cli.NewApp()
 
 	formatInFlag = cli.StringFlag{
 		Name:  "inputf",
@@ -104,8 +103,8 @@ var (
 		Value: "",
 	}
 	fileInFlag = cli.StringFlag{
-		Name:        "file",
-		Usage:       "Path to JSON chain configuration file",
+		Name:  "file",
+		Usage: "Path to JSON chain configuration file",
 	}
 	defaultValueFlag = cli.StringFlag{
 		Name:  "default",
@@ -126,8 +125,13 @@ var errInvalidChainspecValue = errors.New("could not read given chainspec")
 var errEmptyChainspecValue = errors.New("missing chainspec data")
 
 func mustGetChainspecValue(ctx *cli.Context) error {
-	if ctx.NArg() == 1 && strings.HasPrefix(ctx.Args().First(), "ls-") {
-		return nil
+	if ctx.NArg() >= 1 {
+		if strings.HasPrefix(ctx.Args().First(), "ls-") {
+			return nil
+		}
+		if strings.Contains(ctx.Args().First(), "help") {
+			return nil
+		}
 	}
 	if ctx.GlobalIsSet(defaultValueFlag.Name) {
 		if ctx.GlobalString(defaultValueFlag.Name) == "" {
@@ -154,13 +158,15 @@ func mustGetChainspecValue(ctx *cli.Context) error {
 
 func convertf(ctx *cli.Context) error {
 	c, ok := chainspecFormatTypes[ctx.String(outputFormatFlag.Name)]
-	if !ok {
+	if !ok && ctx.String(outputFormatFlag.Name) == "" {
 		b, err := jsonMarshalPretty(globalChainspecValue)
 		if err != nil {
 			return err
 		}
 		fmt.Println(string(b))
 		return nil
+	} else if !ok {
+		return errInvalidOutputFlag
 	}
 	err := convert.Convert(globalChainspecValue, c)
 	if err != nil {
@@ -175,6 +181,70 @@ func convertf(ctx *cli.Context) error {
 }
 
 func init() {
+	app.Name = "echainspec"
+	app.Usage = "A chain specification and configuration tool for EVM clients"
+	//app.Description = "A chain specification and configuration tool for EVM clients"
+	app.Version = params.VersionWithCommit(gitCommit, gitDate)
+	cli.AppHelpTemplate = `{{.Name}} {{if .Flags}}[global options] {{end}}command{{if .Flags}} [command options]{{end}} [arguments...]
+
+USAGE:
+
+- Reading and writing chain configurations:
+
+	The default behavior is to act as a configuration reader and writer (and implicit converter). 
+	To establish a target configuration to read, you can either 
+		1. Pass in a chain configuration externally, or
+		2. Use one of the builtin defaults.
+
+	(1.) When reading an external configuration, specify --inputf to define how the provided
+	configuration should be interpreted.
+
+	The tool expects to read from standard input (fd 0). Use --file to specify a filepath instead.
+
+	With an optional --outputf flag, the tool will write the established configuration in the desired format.
+	If no --outputf is given, the configuration will be printed in its original format.
+
+	Run the following to list available client formats (both for reading and writing):
+
+		{{.Name}} ls-formats
+
+	(2.) Use --default [<chain>] to set the chain configuration value to one of the built in defaults.
+	Run the following to list available default configuration values.
+
+		{{.Name}} ls-defaults
+
+- Inspecting chain configurations:
+
+	Additional commands are provided (see COMMANNDS section) to help grok chain configurations.
+
+EXAMPLES:
+
+	Convert an external chain configuration between client formats (from STDIN)
+.
+		> cat my-parity-spec.json | {{.Name}} --inputf parity --outputf [geth|multigeth]
+
+	Convert an external chain configuration between client formats (from file).
+
+		> {{.Name}} --inputf parity --file my-parity-spec.json --outputf [geth|multigeth]
+
+	Print a default Ethereum Classic network chain configuration in multigeth format:
+	
+		> {{.Name}} --default classic --outputf multigeth
+
+	Validate a default Kotti network chain configuration for block #3000000:
+	
+		> {{.Name}} --default kotti validate 3000000
+
+VERSION:
+   {{.Version}}
+
+COMMANDS:
+   {{range .Commands}}{{.Name}}{{with .ShortName}}, {{.}}{{end}}{{ "\t" }}{{.Usage}}
+   {{end}}{{if .Flags}}
+GLOBAL OPTIONS:
+   {{range .Flags}}{{.}}
+   {{end}}{{end}}
+`
 	log.SetFlags(0)
 	app.Flags = []cli.Flag{
 		formatInFlag,
@@ -184,7 +254,7 @@ func init() {
 	}
 	app.Commands = []cli.Command{
 		lsDefaultsCommand,
-		lsClientsCommand,
+		lsFormatsCommand,
 		validateCommand,
 		forksCommand,
 		ipsCommand,

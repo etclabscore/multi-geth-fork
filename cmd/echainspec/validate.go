@@ -13,8 +13,8 @@ var validateCommand = cli.Command{
 	Name:      "validate",
 	Aliases:   []string{"valid"},
 	Description: "Exits 0 if valid, 1 if not.",
-	Usage:     "Accepts a number <head block number> as it's single argument",
-	ArgsUsage: "0x042, 0x42|42",
+	Usage:     "Tests whether a configuration is valid",
+	ArgsUsage: "[|0x042|0x42|42]",
 	Action:    validate,
 }
 

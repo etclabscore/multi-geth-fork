@@ -14,6 +14,11 @@ import (
 
 func readInputData(ctx *cli.Context) ([]byte, error) {
 	if !ctx.GlobalIsSet(fileInFlag.Name) {
+		if fi, err := os.Stdin.Stat(); err != nil {
+			return nil, err
+		} else if fi.Size() == 0 {
+			return nil, errEmptyChainspecValue
+		}
 		return ioutil.ReadAll(os.Stdin)
 	}
 	return ioutil.ReadFile(ctx.GlobalString(fileInFlag.Name))

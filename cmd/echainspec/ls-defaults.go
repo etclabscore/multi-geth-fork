@@ -8,7 +8,7 @@ import (
 
 var lsDefaultsCommand = cli.Command{
 	Name:               "ls-defaults",
-	Usage:              "List available default configurations",
+	Usage:              "List default configurations",
 	Action: lsDefaults,
 }
 
