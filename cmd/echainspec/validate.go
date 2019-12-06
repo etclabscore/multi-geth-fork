@@ -11,7 +11,6 @@ import (
 
 var validateCommand = cli.Command{
 	Name:      "validate",
-	ShortName: "v",
 	Aliases:   []string{"valid"},
 	Description: "Exits 0 if valid, 1 if not.",
 	Usage:     "Accepts a number <head block number> as it's single argument",

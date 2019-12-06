@@ -23,7 +23,7 @@ formats: [parity|multigeth|geth|~~aleth(TODO)~~]
 
 ? If -[i|in] is not passed, then GUESS the proper config by trial and error. Exit 1 if not found.
 
-> echainspec -[i|in] <format> convert -[o|out] multigeth [<stdin>|<my/file/path.json]
+> echainspec -[i|in] <format> -[o|out] multigeth [--file=<my/file/path.json|<stdin>]
 #@1> <JSON>
 
 > echainspec -[i|in] <format> validate [<stdin>|<my/file/path.json]
@@ -96,13 +96,13 @@ var (
 	}
 	fileInFlag = cli.StringFlag{
 		Name:        "file",
-		Usage:       "Path to chain configuration file (JSON)",
+		Usage:       "Path to JSON chain configuration file",
 	}
 	defaultValueFlag = cli.StringFlag{
 		Name:  "default",
-		Usage: fmt.Sprintf("Default chainspec values [%s]", strings.Join(defaultChainspecNames, "|")),
+		Usage: fmt.Sprintf("Use default chainspec values [%s]", strings.Join(defaultChainspecNames, "|")),
 	}
-	convertOutputFormatFlag = cli.StringFlag{
+	outputFormatFlag = cli.StringFlag{
 		Name:  "outputf",
 		Usage: fmt.Sprintf("Output format type for converted configuration file [%s]", strings.Join(chainspecFormats, "|")),
 	}
@@ -141,7 +141,7 @@ func mustGetChainspecValue(ctx *cli.Context) error {
 }
 
 func convertf(ctx *cli.Context) error {
-	c, ok := chainspecFormatTypes[ctx.String(convertOutputFormatFlag.Name)]
+	c, ok := chainspecFormatTypes[ctx.String(outputFormatFlag.Name)]
 	if !ok {
 		b, err := jsonMarshalPretty(globalChainspecValue)
 		if err != nil {
@@ -168,7 +168,7 @@ func init() {
 		formatInFlag,
 		fileInFlag,
 		defaultValueFlag,
-		convertOutputFormatFlag,
+		outputFormatFlag,
 	}
 	app.Commands = []cli.Command{
 		validateCommand,

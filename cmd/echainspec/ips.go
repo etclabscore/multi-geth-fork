@@ -10,7 +10,7 @@ import (
 
 var ipsCommand = cli.Command{
 	Name:               "ips",
-	Usage:              "List IP transitions names and values",
+	Usage:              "List IP transition names and values",
 	Action: ips,
 }
 
