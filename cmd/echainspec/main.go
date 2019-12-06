@@ -126,6 +126,9 @@ var errInvalidChainspecValue = errors.New("could not read given chainspec")
 var errEmptyChainspecValue = errors.New("missing chainspec data")
 
 func mustGetChainspecValue(ctx *cli.Context) error {
+	if ctx.NArg() == 1 && strings.HasPrefix(ctx.Args().First(), "ls-") {
+		return nil
+	}
 	if ctx.GlobalIsSet(defaultValueFlag.Name) {
 		if ctx.GlobalString(defaultValueFlag.Name) == "" {
 			return errNoChainspecValue
@@ -180,6 +183,8 @@ func init() {
 		outputFormatFlag,
 	}
 	app.Commands = []cli.Command{
+		lsDefaultsCommand,
+		lsClientsCommand,
 		validateCommand,
 		forksCommand,
 		ipsCommand,
