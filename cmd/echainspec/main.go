@@ -172,7 +172,7 @@ func init() {
 	}
 	app.Commands = []cli.Command{
 		validateCommand,
-		//convertCommand,
+		forksCommand,
 	}
 	app.Before = mustGetChainspecValue
 	app.Action = convertf
