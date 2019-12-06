@@ -21,19 +21,19 @@ formats: [parity|multigeth|geth|~~aleth(TODO)~~]
 
 ? If -[i|in] is not passed, then GUESS the proper config by trial and error. Exit 1 if not found.
 
-> echainspec -[i|in] <format> convert -[o|out] multigeth [-|<my/file/path.json]
+> echainspec -[i|in] <format> convert -[o|out] multigeth [<stdin>|<my/file/path.json]
 #@1> <JSON>
 
-> echainspec -[i|in] <format> validate [-|<my/file/path.json]
+> echainspec -[i|in] <format> validate [<stdin>|<my/file/path.json]
 #> <exitcode=(0|1)>
 
-> echainspec -[i|in] <format> forks [-|<my/file/path.json]
+> echainspec -[i|in] <format> forks [<stdin>|<my/file/path.json]
 #> 1150000
 #> 1920000
 #> 2250000
 #> ...
 
-> echainspec -[i|in] <format> ips [-|<my/file/path.json]
+> echainspec -[i|in] <format> ips [<stdin>|<my/file/path.json]
 #> eip2 1150000
 #> eip7 1150000
 #> eip150 2250000
@@ -92,6 +92,10 @@ var (
 		Usage: fmt.Sprintf("Input format type [%s]", strings.Join(chainspecFormats, "|")),
 		Value: "",
 	}
+	FileInFlag = cli.StringFlag{
+		Name:        "file",
+		Usage:       "Path to chain configuration file (JSON)",
+	}
 	DefaultValueFlag = cli.StringFlag{
 		Name:  "default",
 		Usage: fmt.Sprintf("Default chainspec values [%s]", strings.Join(defaultChainspecNames, "|")),
@@ -131,6 +135,7 @@ func mustGetChainspecValue(ctx *cli.Context) error {
 func init() {
 	app.Flags = []cli.Flag{
 		FormatInFlag,
+		FileInFlag,
 		DefaultValueFlag,
 	}
 	app.Commands = []cli.Command{}

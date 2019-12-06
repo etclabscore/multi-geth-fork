@@ -13,10 +13,10 @@ import (
 )
 
 func readInputData(ctx *cli.Context) ([]byte, error) {
-	if !ctx.Args().Present() {
+	if !ctx.GlobalIsSet(FileInFlag.Name) {
 		return ioutil.ReadAll(os.Stdin)
 	}
-	return ioutil.ReadFile(ctx.Args().First())
+	return ioutil.ReadFile(ctx.GlobalString(FileInFlag.Name))
 }
 
 func unmarshalChainSpec(format string, data []byte) (conf common.Configurator, err error) {
