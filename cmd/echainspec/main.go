@@ -142,6 +142,7 @@ func init() {
 	}
 	app.Commands = []cli.Command{
 		validateCommand,
+		convertCommand,
 	}
 	app.Before = mustGetChainspecValue
 	app.Action = func(ctx *cli.Context) error {
