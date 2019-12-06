@@ -89,16 +89,16 @@ var defaultChainspecNames = func() []string {
 var (
 	app = utils.NewApp(gitCommit, gitDate, "the evm command line interface")
 
-	FormatInFlag = cli.StringFlag{
+	formatInFlag = cli.StringFlag{
 		Name:  "inputf",
 		Usage: fmt.Sprintf("Input format type [%s]", strings.Join(chainspecFormats, "|")),
 		Value: "",
 	}
-	FileInFlag = cli.StringFlag{
+	fileInFlag = cli.StringFlag{
 		Name:        "file",
 		Usage:       "Path to chain configuration file (JSON)",
 	}
-	DefaultValueFlag = cli.StringFlag{
+	defaultValueFlag = cli.StringFlag{
 		Name:  "default",
 		Usage: fmt.Sprintf("Default chainspec values [%s]", strings.Join(defaultChainspecNames, "|")),
 	}
@@ -117,13 +117,13 @@ var errInvalidChainspecValue = errors.New("could not read given chainspec")
 var errEmptyChainspecValue = errors.New("missing chainspec data")
 
 func mustGetChainspecValue(ctx *cli.Context) error {
-	if ctx.GlobalIsSet(DefaultValueFlag.Name) {
-		if ctx.GlobalString(DefaultValueFlag.Name) == "" {
+	if ctx.GlobalIsSet(defaultValueFlag.Name) {
+		if ctx.GlobalString(defaultValueFlag.Name) == "" {
 			return errNoChainspecValue
 		}
-		v, ok := defaultChainspecValues[ctx.GlobalString(DefaultValueFlag.Name)]
+		v, ok := defaultChainspecValues[ctx.GlobalString(defaultValueFlag.Name)]
 		if !ok {
-			return fmt.Errorf("error: %v, name: %s", errInvalidDefaultValue, ctx.GlobalString(DefaultValueFlag.Name))
+			return fmt.Errorf("error: %v, name: %s", errInvalidDefaultValue, ctx.GlobalString(defaultValueFlag.Name))
 		}
 		globalChainspecValue = v
 		return nil
@@ -132,7 +132,7 @@ func mustGetChainspecValue(ctx *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	configurator, err := unmarshalChainSpec(ctx.GlobalString(FormatInFlag.Name), data)
+	configurator, err := unmarshalChainSpec(ctx.GlobalString(formatInFlag.Name), data)
 	if err != nil {
 		return err
 	}
@@ -165,9 +165,9 @@ func convertf(ctx *cli.Context) error {
 func init() {
 	log.SetFlags(0)
 	app.Flags = []cli.Flag{
-		FormatInFlag,
-		FileInFlag,
-		DefaultValueFlag,
+		formatInFlag,
+		fileInFlag,
+		defaultValueFlag,
 		convertOutputFormatFlag,
 	}
 	app.Commands = []cli.Command{
