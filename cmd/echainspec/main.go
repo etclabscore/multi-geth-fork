@@ -16,35 +16,6 @@ import (
 	"gopkg.in/urfave/cli.v1"
 )
 
-/*
-
-formats: [parity|multigeth|geth|~~aleth(TODO)~~]
-
-? If -[i|in] is not passed, then GUESS the proper config by trial and error. Exit 1 if not found.
-
-> echainspec -[i|in] <format> -[o|out] multigeth [--file=<my/file/path.json|<stdin>]
-#@1> <JSON>
-
-> echainspec -[i|in] <format> validate [<stdin>|<my/file/path.json]
-#> <exitcode=(0|1)>
-
-> echainspec -[i|in] <format> forks [<stdin>|<my/file/path.json]
-#> 1150000
-#> 1920000
-#> 2250000
-#> ...
-
-> echainspec -[i|in] <format> ips [<stdin>|<my/file/path.json]
-#> eip2 1150000
-#> eip7 1150000
-#> eip150 2250000
-#> eip155 2650000
-#> eip161abc 3000000
-#> eip161d 3000000
-#> eip170 3000000
-
-*/
-
 var gitCommit = "" // Git SHA1 commit hash of the release (set via linker flags)
 var gitDate = ""
 
