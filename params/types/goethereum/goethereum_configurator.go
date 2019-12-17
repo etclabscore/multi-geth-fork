@@ -77,6 +77,8 @@ func (c *ChainConfig) SwapIfAlt() ctypes.ChainConfigurator {
 		}
 		c.altDT = pc
 		return c.altDT
+	case "":
+		return nil
 	default:
 		panic("invalid alt chain config")
 	}
