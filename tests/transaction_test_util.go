@@ -77,35 +77,42 @@ func (tt *TransactionTest) Run(config ctypes.ChainConfigurator) error {
 		{"Frontier", types.FrontierSigner{}, tt.Frontier, false, false},
 		{"Homestead", types.HomesteadSigner{}, tt.Homestead, true, false},
 		{"EIP150", types.HomesteadSigner{}, tt.EIP150, true, false},
+<<<<<<< HEAD
 		{"EIP158", types.NewEIP155Signer(config.GetChainID()), tt.EIP158, true, false},
 		{"Byzantium", types.NewEIP155Signer(config.GetChainID()), tt.Byzantium, true, false},
 		{"Constantinople", types.NewEIP155Signer(config.GetChainID()), tt.Constantinople, true, false},
 		//TODO! @holiman or @rjl493456442 : enable this after tests have been updated for Istanbul
 		{"Istanbul", types.NewEIP155Signer(config.GetChainID()), tt.Istanbul, true, true},
+=======
+		{"EIP158", types.NewEIP155Signer(config.ChainID), tt.EIP158, true, false},
+		{"Byzantium", types.NewEIP155Signer(config.ChainID), tt.Byzantium, true, false},
+		{"Constantinople", types.NewEIP155Signer(config.ChainID), tt.Constantinople, true, false},
+		{"Istanbul", types.NewEIP155Signer(config.ChainID), tt.Istanbul, true, true},
+>>>>>>> foundation-1.9.9
 	} {
 		sender, txhash, err := validateTx(tt.RLP, testcase.signer, testcase.isHomestead, testcase.isIstanbul)
 
 		if testcase.fork.Sender == (common.UnprefixedAddress{}) {
 			if err == nil {
-				return fmt.Errorf("Expected error, got none (address %v)[%v]", sender.String(), testcase.name)
+				return fmt.Errorf("expected error, got none (address %v)[%v]", sender.String(), testcase.name)
 			}
 			continue
 		}
 		// Should resolve the right address
 		if err != nil {
-			return fmt.Errorf("Got error, expected none: %v", err)
+			return fmt.Errorf("got error, expected none: %v", err)
 		}
 		if sender == nil {
 			return fmt.Errorf("sender was nil, should be %x", common.Address(testcase.fork.Sender))
 		}
 		if *sender != common.Address(testcase.fork.Sender) {
-			return fmt.Errorf("Sender mismatch: got %x, want %x", sender, testcase.fork.Sender)
+			return fmt.Errorf("sender mismatch: got %x, want %x", sender, testcase.fork.Sender)
 		}
 		if txhash == nil {
 			return fmt.Errorf("txhash was nil, should be %x", common.Hash(testcase.fork.Hash))
 		}
 		if *txhash != common.Hash(testcase.fork.Hash) {
-			return fmt.Errorf("Hash mismatch: got %x, want %x", *txhash, testcase.fork.Hash)
+			return fmt.Errorf("hash mismatch: got %x, want %x", *txhash, testcase.fork.Hash)
 		}
 	}
 	return nil

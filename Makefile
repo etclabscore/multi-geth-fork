@@ -61,8 +61,13 @@ lint: ## Run linters.
 	go run build/ci.go lint
 
 clean:
+<<<<<<< HEAD
 	./build/clean_go_build_cache.sh
 	rm -fr $(GOBIN)/*
+=======
+	go clean -cache
+	rm -fr build/_workspace/pkg/ $(GOBIN)/*
+>>>>>>> foundation-1.9.9
 
 # The devtools target installs tools required for 'go generate'.
 # You need to put $GOBIN (or $GOPATH/bin) in your PATH to use 'go generate'.

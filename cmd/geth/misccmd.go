@@ -121,6 +121,7 @@ func version(ctx *cli.Context) error {
 	}
 	fmt.Println("Architecture:", runtime.GOARCH)
 	fmt.Println("Protocol Versions:", eth.ProtocolVersions)
+<<<<<<< HEAD
 	fmt.Println("Network Id:", func(ctx *cli.Context) uint64 {
 		if ctx.GlobalIsSet(utils.NetworkIdFlag.Name) {
 			return ctx.GlobalUint64(utils.NetworkIdFlag.Name)
@@ -129,6 +130,8 @@ func version(ctx *cli.Context) error {
 		// FIXME: The existence of this field (following) should be removed.
 		return eth.DefaultConfig.NetworkId
 	}(ctx))
+=======
+>>>>>>> foundation-1.9.9
 	fmt.Println("Go Version:", runtime.Version())
 	fmt.Println("Operating System:", runtime.GOOS)
 	fmt.Printf("GOPATH=%s\n", os.Getenv("GOPATH"))

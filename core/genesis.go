@@ -46,6 +46,7 @@ import (
 // error is a *params.ConfigCompatError and the new, unwritten config is returned.
 //
 // The returned chain configuration is never nil.
+<<<<<<< HEAD
 func SetupGenesisBlock(db ethdb.Database, genesis *paramtypes.Genesis) (ctypes.ChainConfigurator, common.Hash, error) {
 	return SetupGenesisBlockWithOverride(db, genesis)
 }
@@ -53,6 +54,15 @@ func SetupGenesisBlock(db ethdb.Database, genesis *paramtypes.Genesis) (ctypes.C
 func SetupGenesisBlockWithOverride(db ethdb.Database, genesis *paramtypes.Genesis) (ctypes.ChainConfigurator, common.Hash, error) {
 	if genesis != nil && confp.IsEmpty(genesis.Config) {
 		return params.AllEthashProtocolChanges, common.Hash{}, paramtypes.ErrGenesisNoConfig
+=======
+func SetupGenesisBlock(db ethdb.Database, genesis *Genesis) (*params.ChainConfig, common.Hash, error) {
+	return SetupGenesisBlockWithOverride(db, genesis, nil, nil)
+}
+
+func SetupGenesisBlockWithOverride(db ethdb.Database, genesis *Genesis, overrideIstanbul, overrideMuirGlacier *big.Int) (*params.ChainConfig, common.Hash, error) {
+	if genesis != nil && genesis.Config == nil {
+		return params.AllEthashProtocolChanges, common.Hash{}, errGenesisNoConfig
+>>>>>>> foundation-1.9.9
 	}
 	// Just commit the new block if there is no stored genesis block.
 	stored := rawdb.ReadCanonicalHash(db, 0)
@@ -99,7 +109,20 @@ func SetupGenesisBlockWithOverride(db ethdb.Database, genesis *paramtypes.Genesi
 	}
 
 	// Get the existing chain configuration.
+<<<<<<< HEAD
 	newcfg := configOrDefault(genesis, stored)
+=======
+	newcfg := genesis.configOrDefault(stored)
+	if overrideIstanbul != nil {
+		newcfg.IstanbulBlock = overrideIstanbul
+	}
+	if overrideMuirGlacier != nil {
+		newcfg.MuirGlacierBlock = overrideMuirGlacier
+	}
+	if err := newcfg.CheckConfigForkOrder(); err != nil {
+		return newcfg, common.Hash{}, err
+	}
+>>>>>>> foundation-1.9.9
 	storedcfg := rawdb.ReadChainConfig(db, stored)
 	if storedcfg == nil {
 		log.Warn("Found genesis block without chain config")

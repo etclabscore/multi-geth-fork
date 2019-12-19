@@ -40,8 +40,34 @@ import (
 
 // Ethash proof-of-work protocol constants.
 var (
+<<<<<<< HEAD
 	maxUncles              = 2                // Maximum number of uncles allowed in a single block
 	allowedFutureBlockTime = 15 * time.Second // Max time from current time allowed for blocks, before they're considered future blocks
+=======
+	FrontierBlockReward       = big.NewInt(5e+18) // Block reward in wei for successfully mining a block
+	ByzantiumBlockReward      = big.NewInt(3e+18) // Block reward in wei for successfully mining a block upward from Byzantium
+	ConstantinopleBlockReward = big.NewInt(2e+18) // Block reward in wei for successfully mining a block upward from Constantinople
+	maxUncles                 = 2                 // Maximum number of uncles allowed in a single block
+	allowedFutureBlockTime    = 15 * time.Second  // Max time from current time allowed for blocks, before they're considered future blocks
+
+	// calcDifficultyEip2384 is the difficulty adjustment algorithm as specified by EIP 2384.
+	// It offsets the bomb 4M blocks from Constantinople, so in total 9M blocks.
+	// Specification EIP-2384: https://eips.ethereum.org/EIPS/eip-2384
+	calcDifficultyEip2384 = makeDifficultyCalculator(big.NewInt(9000000))
+
+	// calcDifficultyConstantinople is the difficulty adjustment algorithm for Constantinople.
+	// It returns the difficulty that a new block should have when created at time given the
+	// parent block's time and difficulty. The calculation uses the Byzantium rules, but with
+	// bomb offset 5M.
+	// Specification EIP-1234: https://eips.ethereum.org/EIPS/eip-1234
+	calcDifficultyConstantinople = makeDifficultyCalculator(big.NewInt(5000000))
+
+	// calcDifficultyByzantium is the difficulty adjustment algorithm. It returns
+	// the difficulty that a new block should have when created at time given the
+	// parent block's time and difficulty. The calculation uses the Byzantium rules.
+	// Specification EIP-649: https://eips.ethereum.org/EIPS/eip-649
+	calcDifficultyByzantium = makeDifficultyCalculator(big.NewInt(3000000))
+>>>>>>> foundation-1.9.9
 )
 
 // Various error messages to mark blocks invalid. These should be private to
@@ -306,7 +332,23 @@ func parent_diff_over_dbd(p *types.Header) *big.Int {
 // given the parent block's time and difficulty.
 func CalcDifficulty(config ctypes.ChainConfigurator, time uint64, parent *types.Header) *big.Int {
 	next := new(big.Int).Add(parent.Number, big1)
+<<<<<<< HEAD
 	out := new(big.Int)
+=======
+	switch {
+	case config.IsMuirGlacier(next):
+		return calcDifficultyEip2384(time, parent)
+	case config.IsConstantinople(next):
+		return calcDifficultyConstantinople(time, parent)
+	case config.IsByzantium(next):
+		return calcDifficultyByzantium(time, parent)
+	case config.IsHomestead(next):
+		return calcDifficultyHomestead(time, parent)
+	default:
+		return calcDifficultyFrontier(time, parent)
+	}
+}
+>>>>>>> foundation-1.9.9
 
 	// ADJUSTMENT algorithms
 	if config.IsForked(config.GetEthashEIP100BTransition, next) {

@@ -159,4 +159,11 @@ type Config struct {
 
 	// Istanbul block override (TODO: remove after the fork)
 	OverrideIstanbul *big.Int
+<<<<<<< HEAD
 }
+=======
+
+	// MuirGlacier block override (TODO: remove after the fork)
+	OverrideMuirGlacier *big.Int
+}
+>>>>>>> foundation-1.9.9

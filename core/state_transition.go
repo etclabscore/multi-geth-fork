@@ -76,11 +76,19 @@ type Message interface {
 }
 
 // IntrinsicGas computes the 'intrinsic gas' for a message with the given data.
+<<<<<<< HEAD
 func IntrinsicGas(data []byte, contractCreation, isEIP2 bool, isEIP2028 bool) (uint64, error) {
 	// Set the starting gas for the raw transaction
 	var gas uint64
 	if contractCreation && isEIP2 {
 		gas = vars.TxGasContractCreation
+=======
+func IntrinsicGas(data []byte, contractCreation, isHomestead bool, isEIP2028 bool) (uint64, error) {
+	// Set the starting gas for the raw transaction
+	var gas uint64
+	if contractCreation && isHomestead {
+		gas = params.TxGasContractCreation
+>>>>>>> foundation-1.9.9
 	} else {
 		gas = vars.TxGas
 	}

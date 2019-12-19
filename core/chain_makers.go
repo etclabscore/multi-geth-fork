@@ -286,8 +286,12 @@ func makeBlockChain(parent *types.Block, n int, engine consensus.Engine, db ethd
 }
 
 type fakeChainReader struct {
+<<<<<<< HEAD
 	config  ctypes.ChainConfigurator
 	genesis *types.Block
+=======
+	config *params.ChainConfig
+>>>>>>> foundation-1.9.9
 }
 
 // Config returns the chain configuration.
