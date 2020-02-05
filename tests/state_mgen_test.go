@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -30,8 +31,86 @@ import (
 	"github.com/ethereum/go-ethereum/internal/build"
 	"github.com/ethereum/go-ethereum/params"
 	"github.com/ethereum/go-ethereum/params/confp/tconvert"
-	"github.com/iancoleman/strcase"
 )
+
+// TestGenStateSpecFiles is a program to write chain specification files where they don't yet exist.
+func TestGenStateSpecFiles(t *testing.T) {
+	if os.Getenv(MG_GENERATE_STATE_TESTS_KEY) == "" {
+		t.Skip()
+	}
+
+	st := new(testMatcher)
+
+	for _, p := range []string{
+		stateTestDir,
+		legacyStateTestDir,
+	} {
+		st.walkFullName(t, p, func(t *testing.T, name string, test *StateTest) {
+			// For tests using a config that does not have an associated chainspec file,
+			// then generate that file.
+			for _, subtest := range test.Subtests() {
+				subtest := subtest
+
+				// Look up base-test reference pairs.
+				// forkWriterPair is subtest's fork as a base reference configuration for a writing test config.
+				writeTestConfigName, ok := writeStateTestsReferencePairs[subtest.Fork]
+				if !ok {
+					t.Log("Nonwriting subtest fork:", subtest.Fork)
+					continue
+				}
+
+				// Lookups will panic if they fail.
+				// This will at least force developers generating tests to be (if slowly) aware
+				// of where configurations must be added.
+				t.Log("Writing subtest fork:", subtest.Fork, "->", writeTestConfigName)
+				writeTestConfigFileName, ok := MapForkNameChainspecFileState[writeTestConfigName]
+				if !ok {
+					panic("missing config file name")
+				}
+
+				specPath := filepath.Join(paritySpecsDir, writeTestConfigFileName)
+				info, err := os.Stat(specPath)
+				if err == nil && !info.IsDir() {
+
+					// This will leave existing configuration untouched.
+					// If we want to overwrite configurations for updates, then
+					// this logic will need to be modified.
+					log.Println("Skipping config file generation; already exists", specPath)
+					continue
+				} else if err == nil {
+					panic("was directory, want file at path: " + specPath)
+				}
+				if err != nil && !os.IsNotExist(err) {
+					panic(err)
+				}
+
+				// Find the configuration value that we'll write to a file.
+				conf := Forks[writeTestConfigName] // panic if unavailable
+
+				// Get it as a genesis data type.
+				genesis := test.genesis(conf)
+
+				// Establish a parity (current lingua franca) version of this configuration value.
+				pspec, err := tconvert.NewParityChainSpec(writeTestConfigName, genesis, []string{})
+				if err != nil {
+					t.Fatal(err)
+				}
+				b, err := json.MarshalIndent(pspec, "", "    ")
+				if err != nil {
+					t.Fatal(err)
+				}
+				filename := specPath
+				err = ioutil.WriteFile(filename, b, os.ModePerm)
+				if err != nil {
+					t.Fatal(err)
+				}
+				sum := sha1.Sum(b)
+				chainspecRefsState[writeTestConfigName] = chainspecRef{filepath.Base(filename), sum[:]}
+				t.Logf("Created new fork chainspec file: %v", chainspecRefsState[writeTestConfigName])
+			}
+		})
+	}
+}
 
 func TestGenState(t *testing.T) {
 	if os.Getenv(MG_GENERATE_STATE_TESTS_KEY) == "" {
@@ -88,31 +167,6 @@ func withWritingTests(t *testing.T, name string, test *StateTest) {
 	// out the global scope as possible.
 	head := build.RunGit("rev-parse", "HEAD")
 	head = strings.TrimSpace(head)
-
-	// For tests using a config that does not have an associated chainspec file,
-	// then generate that file.
-	for _, subtest := range test.Subtests() {
-		subtest := subtest
-		if _, ok := MapForkNameChainspecFileState[subtest.Fork]; !ok {
-			genesis := test.genesis(Forks[subtest.Fork])
-			pspec, err := tconvert.NewParityChainSpec(subtest.Fork, genesis, []string{})
-			if err != nil {
-				t.Fatal(err)
-			}
-			b, err := json.MarshalIndent(pspec, "", "    ")
-			if err != nil {
-				t.Fatal(err)
-			}
-			filename := paritySpecPath(strcase.ToSnake(subtest.Fork) + ".json")
-			err = ioutil.WriteFile(filename, b, os.ModePerm)
-			if err != nil {
-				t.Fatal(err)
-			}
-			sum := sha1.Sum(b)
-			chainspecRefsState[subtest.Fork] = chainspecRef{filepath.Base(filename), sum[:]}
-			t.Logf("Created new fork chainspec file: %v", chainspecRefsState[subtest.Fork])
-		}
-	}
 
 	for _, subtest := range test.Subtests() {
 		subtest := subtest

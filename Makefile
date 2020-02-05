@@ -55,7 +55,12 @@ test-multigeth-chainspecs: ## Run tests specific to multi-geth using chainspec f
 	@echo "Testing Parity JSON chainspec equivalence."
 	env MULTIGETH_TESTS_CHAINCONFIG_PARITY_SPECS=on go test -count=1 ./tests
 
-tests-generate: tests-generate-state tests-generate-difficulty ## Generate all tests.
+tests-generate: tests-generate-chainspecs tests-generate-state tests-generate-difficulty ## Generate all tests.
+
+tests-generate-chainspecs:
+	@echo "Generating state tests."
+	env MULTIGETH_TESTS_GENERATE_STATE_TESTS=on \
+	go run build/ci.go test -v ./tests -run TestGenStateSpecFiles
 
 tests-generate-state: ## Generate state tests.
 	@echo "Generating state tests."
