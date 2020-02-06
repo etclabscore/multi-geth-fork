@@ -925,7 +925,7 @@ func (spec *ParityChainSpec) UpdateAccount(address common.Address, bal *big.Int,
 	if !ok {
 		spec.Accounts[addr] = &ParityChainSpecAccount{}
 	}
-	spec.Accounts[addr].Balance = *math.NewHexOrDecimal256(bal.Int64())
+	spec.Accounts[addr].Balance = (math.HexOrDecimal256)(*bal)
 	spec.Accounts[addr].Nonce = math.HexOrDecimal64(nonce)
 
 	zero := uint64(0)
