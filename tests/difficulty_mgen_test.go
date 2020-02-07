@@ -36,7 +36,7 @@ import (
 
 var outNDJSONFile = filepath.Join(difficultyTestDir, "mgen_difficulty.ndjson")
 
-func TestDifficultyGen(t *testing.T) {
+func TestGenDifficulty(t *testing.T) {
 	generateTests := os.Getenv(MG_GENERATE_DIFFICULTY_TESTS_KEY) != ""
 
 	if !generateTests {
@@ -87,107 +87,105 @@ func TestDifficultyGen(t *testing.T) {
 
 		if test.ParentDifficulty.Cmp(vars.MinimumDifficulty) < 0 {
 			t.Skip("difficulty below minimum")
-			return
 		}
 		if err := dt.checkFailure(t, name, test.Run(cfg)); err != nil {
 			t.Error(err)
-		} else {
+			return
+		}
 
-			// Collect all paired tests and originals.
-			// The output file will yield ALL tests, not just newly-generated ones.
-			specFile, ok := chainspecRefsDifficulty[key]
-			if !ok {
-				t.Fatal("missing spec ref for", specFile)
+		// Collect all paired tests and originals.
+		// The output file will yield ALL tests, not just newly-generated ones.
+		specFile, ok := chainspecRefsDifficulty[key]
+		if !ok {
+			t.Fatal("missing spec ref for", specFile)
+		}
+		test.Chainspec = specFile
+		test.Name = strings.ReplaceAll(name, ".json", "")
+		mustAppendTestToFile(t, test, outNDJSONFile)
+
+		// Kind of ugly reverse lookup from file -> fork name.
+		var forkName string
+		for k, v := range mapForkNameChainspecFileDifficulty {
+			if v == test.Chainspec.Filename {
+				forkName = k
+				break
 			}
-			test.Chainspec = specFile
-			test.Name = strings.ReplaceAll(name, ".json", "")
-			mustAppendTestToFile(t, test, outNDJSONFile)
+		}
+		if forkName == "" {
+			t.Fatal("missing fork/fileconf name", test, mapForkNameChainspecFileDifficulty)
+		}
 
-			// Kind of ugly reverse lookup from file -> fork name.
-			var forkName string
-			for k, v := range mapForkNameChainspecFileDifficulty {
-				if v == test.Chainspec.Filename {
-					forkName = k
-					break
-				}
-			}
-			if forkName == "" {
-				t.Fatal("missing fork/fileconf name", test, mapForkNameChainspecFileDifficulty)
-			}
+		// Is test(config) associated with a new test to be generated.
+		associateForkName, ok := writeDifficultyTestsReferencePairs[forkName]
+		if !ok {
+			t.Logf("OK [existing,nonref] %v", test)
+			return
+		}
 
-			// Is test(config) associated with a new test to be generated.
-			associateForkName, ok := writeDifficultyTestsReferencePairs[forkName]
-			if !ok {
-				t.Logf("OK [existing,nonref] %v", test)
-				return
-			}
+		conf, ok := difficultyChainConfigurations[associateForkName]
+		if !ok {
+			panic("generating config associated failed; no existing Go chain config found")
+		}
 
-			conf, ok := difficultyChainConfigurations[associateForkName]
-			if !ok {
-				panic("generating config associated failed; no existing Go chain config found")
-			}
+		// If associated chainspec file has not been written at least once, write it.
+		// This ensures that for test generation, a chain spec file be written if it does not already exist.
+		// This is because it is more likely that we will want to write the chain spec in Go, then have the
+		// generator write the spec along with the tests to save the hurdle of manually building the chain spec
+		// file first as a dependency for test generation.
+		specref, done := wroteNewChainConfigs[associateForkName]
+		if !done {
+			genesis := params.DefaultTestnetGenesisBlock()
+			genesis.Config = conf
 
-			// If associated chainspec file has not been written at least once, write it.
-			// This ensures that for test generation, a chain spec file be written if it does not already exist.
-			// This is because it is more likely that we will want to write the chain spec in Go, then have the
-			// generator write the spec along with the tests to save the hurdle of manually building the chain spec
-			// file first as a dependency for test generation.
-			specref, done := wroteNewChainConfigs[associateForkName]
-			if !done {
-				genesis := params.DefaultTestnetGenesisBlock()
-				genesis.Config = conf
-
-				pspec, err := tconvert.NewParityChainSpec(associateForkName, genesis, []string{})
-				if err != nil {
-					t.Fatal(err)
-				}
-				specFilepath, ok := mapForkNameChainspecFileDifficulty[associateForkName]
-				if !ok {
-					t.Fatal("nonexisting chainspec JSON file path, ref/assoc config: ", forkName, associateForkName)
-				}
-
-				b, err := json.MarshalIndent(pspec, "", "    ")
-				if err != nil {
-					t.Fatal(err)
-				}
-
-				err = ioutil.WriteFile(paritySpecPath(specFilepath), b, os.ModePerm)
-				if err != nil {
-					t.Fatal(err)
-				}
-
-				sum := sha1.Sum(b)
-				specref = chainspecRef{
-					Filename: specFilepath,
-					Sha1Sum:  sum[:],
-				}
-				wroteNewChainConfigs[associateForkName] = specref
-			}
-
-			newTest := &DifficultyTest{
-				ParentTimestamp:    test.ParentTimestamp,
-				ParentDifficulty:   test.ParentDifficulty,
-				UncleHash:          test.UncleHash,
-				CurrentTimestamp:   test.CurrentTimestamp,
-				CurrentBlockNumber: test.CurrentBlockNumber,
-				CurrentDifficulty: ethash.CalcDifficulty(conf, test.CurrentTimestamp, &types.Header{
-					Difficulty: test.ParentDifficulty,
-					Time:       test.ParentTimestamp,
-					Number:     big.NewInt(int64(test.CurrentBlockNumber - 1)),
-					UncleHash:  test.UncleHash,
-				}),
-				Chainspec: specref,
-				Name:      strings.ReplaceAll(test.Name, forkName, associateForkName),
-			}
-
-			// "Dogfood".
-			if err := newTest.Run(conf); err != nil {
+			pspec, err := tconvert.NewParityChainSpec(associateForkName, genesis, []string{})
+			if err != nil {
 				t.Fatal(err)
 			}
-			mustAppendTestToFile(t, newTest, outNDJSONFile)
-			t.Logf("OK [generated] %v", newTest)
+			specFilepath, ok := mapForkNameChainspecFileDifficulty[associateForkName]
+			if !ok {
+				t.Fatal("nonexisting chainspec JSON file path, ref/assoc config: ", forkName, associateForkName)
+			}
 
+			b, err := json.MarshalIndent(pspec, "", "    ")
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			err = ioutil.WriteFile(paritySpecPath(specFilepath), b, os.ModePerm)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			sum := sha1.Sum(b)
+			specref = chainspecRef{
+				Filename: specFilepath,
+				Sha1Sum:  sum[:],
+			}
+			wroteNewChainConfigs[associateForkName] = specref
 		}
+
+		newTest := &DifficultyTest{
+			ParentTimestamp:    test.ParentTimestamp,
+			ParentDifficulty:   test.ParentDifficulty,
+			UncleHash:          test.UncleHash,
+			CurrentTimestamp:   test.CurrentTimestamp,
+			CurrentBlockNumber: test.CurrentBlockNumber,
+			CurrentDifficulty: ethash.CalcDifficulty(conf, test.CurrentTimestamp, &types.Header{
+				Difficulty: test.ParentDifficulty,
+				Time:       test.ParentTimestamp,
+				Number:     big.NewInt(int64(test.CurrentBlockNumber - 1)),
+				UncleHash:  test.UncleHash,
+			}),
+			Chainspec: specref,
+			Name:      strings.ReplaceAll(test.Name, forkName, associateForkName),
+		}
+
+		// "Dogfood".
+		if err := newTest.Run(conf); err != nil {
+			t.Fatal(err)
+		}
+		mustAppendTestToFile(t, newTest, outNDJSONFile)
+		t.Logf("OK [generated] %v", newTest)
 	})
 }
 

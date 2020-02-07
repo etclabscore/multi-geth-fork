@@ -60,19 +60,20 @@ tests-generate: tests-generate-chainspecs tests-generate-state tests-generate-di
 tests-generate-chainspecs:
 	@echo "Generating state tests."
 	env MULTIGETH_TESTS_GENERATE_STATE_TESTS=on \
-	go run build/ci.go test -v ./tests -run TestGenStateSpecFiles
+	go run build/ci.go test -v ./tests -run TestGenStateSpecFiles$
 
 tests-generate-state: ## Generate state tests.
 	@echo "Generating state tests."
 	env MULTIGETH_TESTS_CHAINCONFIG_PARITY_SPECS=on \
 	env MULTIGETH_TESTS_GENERATE_STATE_TESTS=on \
-	go run build/ci.go test -v ./tests -run TestGenState
+	env MULTIGETH_TESTS_GENERATE_DIFFICULTY_TESTS=on \
+	go run build/ci.go test -v ./tests -run TestGenState$
 
 tests-generate-difficulty: ## Generate difficulty tests.
 	@echo "Generating difficulty tests."
 	env MULTIGETH_TESTS_CHAINCONFIG_PARITY_SPECS=on \
 	env MULTIGETH_TESTS_GENERATE_DIFFICULTY_TESTS=on \
-	go run build/ci.go test -v ./tests -run TestDifficultyGen
+	go run build/ci.go test -v ./tests -run TestGenDifficulty$
 
 lint: ## Run linters.
 	go run build/ci.go lint

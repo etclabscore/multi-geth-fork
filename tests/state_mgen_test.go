@@ -21,7 +21,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -39,6 +38,8 @@ func TestGenStateSpecFiles(t *testing.T) {
 		t.Skip()
 	}
 
+	t.Log("Generating state test chainspec file(s).")
+
 	st := new(testMatcher)
 
 	for _, p := range []string{
@@ -55,34 +56,36 @@ func TestGenStateSpecFiles(t *testing.T) {
 				// forkWriterPair is subtest's fork as a base reference configuration for a writing test config.
 				writeTestConfigName, ok := writeStateTestsReferencePairs[subtest.Fork]
 				if !ok {
-					t.Log("Nonwriting subtest fork:", subtest.Fork)
-					continue
+					t.Skip("Nonwriting subtest fork:", subtest.Fork)
 				}
 
 				// Lookups will panic if they fail.
 				// This will at least force developers generating tests to be (if slowly) aware
 				// of where configurations must be added.
-				t.Log("Writing subtest fork:", subtest.Fork, "->", writeTestConfigName)
+				t.Log("Writable subtest fork:", subtest.Fork, "->", writeTestConfigName)
 				writeTestConfigFileName, ok := MapForkNameChainspecFileState[writeTestConfigName]
 				if !ok {
 					panic("missing config file name")
 				}
 
+				// Check for file existence at specified chainspec path.
+				// If it exists and is a file, then we skip.
+				// Otherwise if anything obvious seems wrong, panic.
+				//
+				// This will leave existing configuration untouched.
+				// If we want to overwrite configurations for updates, then
+				// this logic will need to be modified.
 				specPath := filepath.Join(paritySpecsDir, writeTestConfigFileName)
 				info, err := os.Stat(specPath)
-				if err == nil && !info.IsDir() {
-
-					// This will leave existing configuration untouched.
-					// If we want to overwrite configurations for updates, then
-					// this logic will need to be modified.
-					log.Println("Skipping config file generation; already exists", specPath)
-					continue
+				if err == nil && info.IsDir() {
+					panic("Found directory, want file at path: " + specPath)
 				} else if err == nil {
-					panic("was directory, want file at path: " + specPath)
-				}
-				if err != nil && !os.IsNotExist(err) {
+					t.Skip("Skipping config file generation; file already exists", specPath)
+				} else if err != nil && !os.IsNotExist(err) {
 					panic(err)
 				}
+
+				t.Log("Writing subtest fork:", subtest.Fork, "->", writeTestConfigName)
 
 				// Find the configuration value that we'll write to a file.
 				conf := Forks[writeTestConfigName] // panic if unavailable
