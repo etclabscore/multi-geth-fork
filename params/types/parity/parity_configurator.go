@@ -591,8 +591,10 @@ func (spec *ParityChainSpec) GetEthashEIP779Transition() *uint64 {
 
 func (spec *ParityChainSpec) SetEthashEIP779Transition(n *uint64) error {
 	spec.Engine.Ethash.Params.DaoHardforkTransition = new(ParityU64).SetUint64(n)
-	spec.Engine.Ethash.Params.DaoHardforkBeneficiary = &vars.DAORefundContract
-	spec.Engine.Ethash.Params.DaoHardforkAccounts = vars.DAODrainList()
+	if n != nil {
+		spec.Engine.Ethash.Params.DaoHardforkBeneficiary = &vars.DAORefundContract
+		spec.Engine.Ethash.Params.DaoHardforkAccounts = vars.DAODrainList()
+	}
 	return nil
 }
 
