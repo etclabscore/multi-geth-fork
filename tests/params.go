@@ -61,6 +61,7 @@ var MapForkNameChainspecFileState = map[string]string{
 	"Istanbul":             "istanbul_test.json",
 	"ETC_Atlantis":         "classic_atlantis_test.json",
 	"ETC_Agharta":          "classic_agharta_test.json",
+	"ETC_Aztlan":           "classic_aztlan_test.json",
 }
 
 var mapForkNameChainspecFileDifficulty = map[string]string{
@@ -75,6 +76,7 @@ var mapForkNameChainspecFileDifficulty = map[string]string{
 	"difficulty.json":   "difficulty_json_difficulty_test.json",
 	"ETC_Atlantis":      "classic_atlantis_difficulty_test.json",
 	"ETC_Agharta":       "classic_agharta_difficulty_test.json",
+	"ETC_Aztlan":        "classic_aztlan_difficulty_test.json",
 }
 
 func readConfigFromSpecFile(name string) (spec ctypes.ChainConfigurator, sha1sum []byte, err error) {
