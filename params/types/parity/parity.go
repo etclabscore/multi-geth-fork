@@ -408,16 +408,9 @@ func (spec *ParityChainSpec) SetPrecompile2(address common.Address, name string,
 		ParityChainSpecPricing: pricing,
 	}
 
-	overwriteDuplicateKey := false
-
-	for k := range bin.Pricing.Map {
-		if k.ToInt().Cmp(newK.ToInt()) == 0 {
-			if overwriteDuplicateKey {
-				bin.Pricing.Map[k] = newV
-			}
-			//if v == newV {
-			//	delete(bin.Pricing.Map, k)
-			//}
+	for k, v := range bin.Pricing.Map {
+		if k.ToInt().Cmp(newK.ToInt()) == 0 && v == newV {
+			delete(bin.Pricing.Map, k)
 		}
 	}
 	bin.Pricing.Map[newK] = newV
