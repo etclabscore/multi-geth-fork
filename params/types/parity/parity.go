@@ -409,7 +409,7 @@ func (spec *ParityChainSpec) SetPrecompile2(address common.Address, name string,
 	}
 
 	for k, v := range bin.Pricing.Map {
-		if k.ToInt().Cmp(newK.ToInt()) == 0 && v == newV {
+		if k.ToInt().Cmp(newK.ToInt()) == 0 && reflect.DeepEqual(v, newV) {
 			delete(bin.Pricing.Map, k)
 		}
 	}
