@@ -71,7 +71,6 @@ tests-generate-state: ## Generate state tests.
 
 tests-generate-difficulty: ## Generate difficulty tests.
 	@echo "Generating difficulty tests."
-	env MULTIGETH_TESTS_CHAINCONFIG_PARITY_SPECS=on \
 	env MULTIGETH_TESTS_GENERATE_DIFFICULTY_TESTS=on \
 	go run build/ci.go test -v ./tests -run TestGenDifficulty$
 

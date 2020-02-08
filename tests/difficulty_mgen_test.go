@@ -21,6 +21,7 @@ import (
 	"crypto/sha1"
 	"encoding/json"
 	"io/ioutil"
+	"log"
 	"math/big"
 	"os"
 	"path/filepath"
@@ -42,8 +43,16 @@ func TestGenDifficulty(t *testing.T) {
 	if !generateTests {
 		t.Skip()
 	}
-	if os.Getenv(MG_CHAINCONFIG_CHAINSPECS_PARITY_KEY) == "" {
-		t.Fatal("Must run test generation with JSON file chain configurations.")
+	for k, v := range mapForkNameChainspecFileDifficulty {
+		config, sha1sum, err := readConfigFromSpecFile(paritySpecPath(v))
+		if os.IsNotExist(err) && os.Getenv(MG_GENERATE_DIFFICULTY_TESTS_KEY) != "" {
+			log.Println("Will generate chainspec file for", k, v)
+		} else if len(sha1sum) == 0 {
+			panic("zero sum game")
+		} else {
+			chainspecRefsDifficulty[k] = chainspecRef{filepath.Base(v), sha1sum}
+			difficultyChainConfigurations[k] = config
+		}
 	}
 
 	err := os.MkdirAll(filepath.Dir(outNDJSONFile), os.ModePerm)
