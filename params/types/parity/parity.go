@@ -403,7 +403,22 @@ func (spec *ParityChainSpec) SetPrecompile2(address common.Address, name string,
 	}
 
 	// Always write in activation-map format.
-	bin.Pricing.Map[math.NewHexOrDecimal256(int64(*activationBlock))] = ParityChainSpecPricingPrice{
+	newK := math.NewHexOrDecimal256(int64(*activationBlock))
+	newV := ParityChainSpecPricingPrice{
 		ParityChainSpecPricing: pricing,
 	}
+
+	overwriteDuplicateKey := false
+
+	for k := range bin.Pricing.Map {
+		if k.ToInt().Cmp(newK.ToInt()) == 0 {
+			if overwriteDuplicateKey {
+				bin.Pricing.Map[k] = newV
+			}
+			//if v == newV {
+			//	delete(bin.Pricing.Map, k)
+			//}
+		}
+	}
+	bin.Pricing.Map[newK] = newV
 }
